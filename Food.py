@@ -1,9 +1,9 @@
 class Food:
-	
+
 	def __init__(self, name, protein, fat, carbs, serving_size):
 		self.name = name
 
-		# Macros per serving (per count if applicable).
+		# Macros per serving (or per count, if applicable).
 		self.protein = protein
 		self.fat = fat
 		self.carbs = carbs
@@ -11,6 +11,7 @@ class Food:
 		# How big each serving is (in grams).
 		self.serving_size = serving_size
 
+    # Calculate the calories given an intake amount (in grams).
 	def calc_calories(self, intake):
 		servings = intake / self.serving_size
 		return (self.protein*servings*4.0) \
@@ -30,11 +31,14 @@ class Food:
 		servings = intake / self.serving_size
 		return [self.protein*servings, self.fat*servings, self.carbs*servings]
 
-# class Meal:
+# Calc macros per gram
+class Meal:
 
-# 	def __init__(self, name, foods):
-#		self.name = name
-# 		self.foods = foods
+	def __init__(self, name, ingredients):
+		self.name = name
+		self.ingredients = ingredients
 
-# 	def calc_macros(self, intake):
-# 		
+	# def calc_macros(self, intake):
+	# 	macros = 0
+	# 	for ingredient in self.ingredients:
+	# 		macros += ingredient
