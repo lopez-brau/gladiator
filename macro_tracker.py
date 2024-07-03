@@ -17,6 +17,14 @@ TO-DO:
 # Update the foods in the database.
 # TODO: Work on adding foods through CLI.
 def add_foods(food):
+    """
+    food (dict):
+        name (str)
+        protein (float)
+        fat (float)
+        carbs (float)
+        serving_size (float)
+    """
     # Read the current list of foods.
     foods = import_foods()
 
@@ -34,6 +42,9 @@ def import_foods():
     with open("foods.json", "r") as handler:
         foods = json.load(handler)
     return foods
+
+def add_meals():
+    pass
 
 if __name__ == "__main__":
     food_list = [
