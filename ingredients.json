@@ -129,13 +129,19 @@
     "protein": 0.6,
     "fat": 0.1,
     "carbs": 3.0,
-    "serving_size": 64
+    "serving_size": 64.0
   },
   "tomatoes_diced": {
     "protein": 1.0,
     "fat": 0.0,
     "carbs": 5.0,
     "serving_size": 121.0
+  },
+  "roma_tomatoes": {
+    "protein": 2.0,
+    "fat": 0.0,
+    "carbs": 7.0,
+    "serving_size": 1.0
   },
   "butter": {
     "protein": 0.0,
@@ -148,5 +154,35 @@
     "fat": 14.0,
     "carbs": 0.0,
     "serving_size": 14.1
+  },
+  "parsley": {
+    "protein": 0.0,
+    "fat": 0.0,
+    "carbs": 0.0,
+    "serving_size": 1.0
+  },
+  "garlic": {
+    "protein": 0.0,
+    "fat": 0.0,
+    "carbs": 0.0,
+    "serving_size": 1.0
+  },
+  "italian_seasoning": {
+    "protein": 0.0,
+    "fat": 0.0,
+    "carbs": 0.0,
+    "serving_size": 1.0
+  },
+  "chili_flakes": {
+    "protein": 0.0,
+    "fat": 0.0,
+    "carbs": 0.0,
+    "serving_size": 1.0
+  },
+  "alfredo_sauce": {
+    "protein": 2.0,
+    "fat": 9.0,
+    "carbs": 2.0,
+    "serving_size": 61.0
   }
 }
