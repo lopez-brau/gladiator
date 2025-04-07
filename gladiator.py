@@ -1,134 +1,198 @@
 import argparse
 import json
 import numpy as np
-import sys
 
-# Define global variables containing the calories per macronutrient gram.
+# Define global variables defining the calories per gram of each macro.
 CALORIES_PER_PROTEIN = 4.0
 CALORIES_PER_FAT = 9.0
 CALORIES_PER_CARB = 4.0
 
 
-# Calculate the calories of an ingredient given an intake amount.
-def calculate_ingredient_calories(ingredient, amount):
-    servings = amount / ingredient["serving_size"]
-    calories = (ingredient["protein"]*CALORIES_PER_PROTEIN*servings) \
-        + (ingredient["fat"]*CALORIES_PER_FAT*servings) \
-        + (ingredient["carbs"]*CALORIES_PER_CARB*servings)
+# Calculate the calories of an ingredient given a serving amount.
+def calculate_ingredient_calories(ingredient: dict, serving: float):
+    calories = serving * (
+        (ingredient["protein"]*CALORIES_PER_PROTEIN)
+        + (ingredient["fat"]*CALORIES_PER_FAT)
+        + (ingredient["carbs"]*CALORIES_PER_CARB)
+    )
     return calories
 
 
-# Calculate the macros of an ingredient given an intake amount.
-def calculate_ingredient_macros(ingredient, amount):
-    servings = amount / ingredient["serving_size"]
-    macros = [
-        ingredient["protein"] * servings,
-        ingredient["fat"] * servings,
-        ingredient["carbs"] * servings
-    ]
+# Calculate the macros of an ingredient given a serving amount.
+def calculate_ingredient_macros(ingredient: dict, serving: float):
+    macros = serving * np.array([
+        ingredient["protein"],
+        ingredient["fat"],
+        ingredient["carbs"]
+    ])
     return macros
 
 
-# Calculate the macro distribution of an ingredient given an intake amount.
-def calculate_ingredient_distribution(ingredient, amount):
-    calories = calculate_ingredient_calories(ingredient, amount)
-    macro_distribution = [
-        (ingredient["protein"]*CALORIES_PER_PROTEIN*servings) / calories,
-        (ingredient["fat"]*CALORIES_PER_FAT*servings) / calories,
-        (ingredient["carbs"]*CALORIES_PER_CARB*servings*4.0) / calories
-    ]
+# Calculate the macro distribution of an ingredient given a serving amount.
+def calculate_macro_distribution(calories: float, macros: np.ndarray):
+    macro_distribution = 100 * np.array([
+        (macros[0]*CALORIES_PER_PROTEIN),
+        (macros[1]*CALORIES_PER_FAT),
+        (macros[2]*CALORIES_PER_CARB)
+    ]) / calories
     return macro_distribution
 
 
-# Calculate the macros of a meal.
-def calculate_meal_macros(meal, amount):
-    for ingredient in meal["ingredients"]:
-        pass
-
-
-def import_ingredients():
+# Converts a list of ingredients into macros and servings.
+def ingredients_to_data(ingredients: list[str], amounts: list[float]):
+    # TODO: Remove after implementing a proper database.
     with open("ingredients.json", "r") as handler:
-        ingredients = json.load(handler)
-    return ingredients
+        ingredient_database = json.load(handler)
 
-# Update the ingredients in the database.
-def add_ingredients(ingredient):
-    """
-    food (dict):
-        name (str)
-        protein (float)
-        fat (float)
-        carbs (float)
-        serving_size (float)
-    """
-    # Read the current list of ingredients.
-    ingredients = import_ingredients()
+    # Store each ingredient's macros and serving amount.
+    nutrition_data = []
+    for ingredient, amount in zip(ingredients, amounts):
+        ingredient_macros = ingredient_database[ingredient]
+        ingredient_serving = amount / ingredient_macros["serving_size"]
+        nutrition_data.append((
+            ingredient_macros,
+            ingredient_serving
+        ))
 
-    # Manipulate ingredients list.
-    with open("ingredients.json", "w") as handler:
-        # Ensure the ingredient doesn't currently exist in the database.
-        if ingredients.get(list(ingredient.keys())[0]):
-            print("This item is already in the database.")
-            return 1
-        else:
-            ingredients[list(ingredient.keys())[0]] = ingredient[list(ingredient.keys())[0]]
-            json.dump(ingredients, handler, indent=2)
+    return nutrition_data
 
-def import_meals():
-    pass
 
-def add_meals():
-    pass
+# Converts a list of meals into macros and servings.
+def meals_to_data(meals: list[str], amounts: list[float]):
+    # TODO: Remove after implementing a proper database.
+    with open("meals.json", "r") as handler:
+        meal_database = json.load(handler)
+
+    # TODO: Remove after implementing a proper database.
+    with open("ingredients.json", "r") as handler:
+        ingredient_database = json.load(handler)
+
+    nutrition_data = []
+    for meal, amount in zip(meals, amounts):
+        # Import the meal's ingredients and serving size from the database.
+        meal_data = meal_database[meal]
+        meal_ingredients = meal_data["ingredients"]
+        meal_serving = amount / meal_data["serving_size"]
+
+        # Store each ingredient's macros and serving amount.
+        for ingredient, amount in meal_ingredients.items():
+            ingredient_macros = ingredient_database[ingredient]
+            ingredient_serving = amount \
+                / ingredient_macros["serving_size"] \
+                * meal_serving
+            nutrition_data.append((ingredient_macros, ingredient_serving))
+
+    return nutrition_data
+
 
 if __name__ == "__main__":
-    """
-    with open("foods.json", "w") as handler:
-        entries = {}
-        #entries = []
-        for food in food_list:
-            entries[food.name] = {
-                "protein": food.protein,
-                "fat": food.fat,
-                "carbs": food.carbs,
-                "serving_size": food.serving_size
-            }
-        json.dump(entries, handler, indent=2)
-    sys.exit("Done!")
-    """
-    ingredients = import_ingredients()
-    print(calculate_ingredient_macros(ingredients["butter"], 40.0))
-    print(calculate_ingredient_calories(ingredients["butter"], 40.0))
-    print(calculate_ingredient_distribution(ingredients["butter"], 40.0))
-    sys.exit("Done!")
     parser = argparse.ArgumentParser(
-        description="A convenient way to calculate your total macros."
+        description="A convenient way to track your macros."
     )
 
-    parser.add_argument("-f", "--food", dest="food", type=str, nargs="*",
-        required=True, help="list of foods")
-    parser.add_argument("-a", "--amount", dest="amount", type=float,
-        nargs="*", required=True, help="list of amount (in grams)")
+    parser.add_argument(
+        "-m",
+        "--mode",
+        dest="mode",
+        type=str,
+        choices=["ingredients", "meals"],
+        required=True,
+        help="the food abstraction to calculate over"
+    )
+    parser.add_argument(
+        "-f",
+        "--foods",
+        dest="foods",
+        type=str,
+        nargs="*",
+        required=False,
+        help="list of foods"
+    )
+    parser.add_argument(
+        "-a",
+        "--amounts",
+        dest="amounts",
+        type=float,
+        nargs="*",
+        required=True,
+        help="list of food amounts (in grams)"
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        dest="quiet",
+        action="store_true",
+        help="suppress output"
+    )
+    parser.add_argument(
+        "-s",
+        "--save",
+        dest="save",
+        action="store_true",
+        help="save results in a csv file"
+    )
+    parser.add_argument(
+        "-u",
+        "--user",
+        dest="user",
+        type=str,
+        required=True,
+        help="the user to save the results under"
+    )
     args = parser.parse_args()
 
-    if len(args.food) != len(args.amount):
-        print("Mismatch between the list of food and list of amounts.")
-        sys.exit(1)
+    # Require the user to input a list of ingredients or meals.
+    if not args.foods:
+        raise Exception("You must input a list of ingredients or meals.")
 
+    # Require the user to input the same number of foods and amounts.
+    if len(args.foods) != len(args.amounts):
+        raise Exception(
+            "The number of foods must match the number of amounts."
+        )
+
+    # Initialize our quantities of interest.
     calories = 0
-    macros = np.array([0, 0, 0])
-    for food in food_list:
-        for f in range(len(args.food)):
-            if food.name == args.food[f]:
-                macros = macros + food.calc_macros(args.amount[f])
-                calories = calories + food.calc_calories(args.amount[f])
+    macros = np.zeros(3, dtype=float)
+    distribution = np.zeros(3, dtype=float)
 
-    calories = np.round(calories, decimals=2)
-    print(f"Calories: {calories}")
-    macros = np.round(macros, decimals=2)
-    print(f"Protein: {macros[0]}g, Fats: {macros[1]}g, Carbs: {macros[2]}g")
-    distribution = np.round(Food(name="", protein=macros[0], fat=macros[1], \
-        carbs=macros[2], serving_size=1).calc_distribution(1), decimals=2) * 100.0
-    print(f"Protein: {distribution[0]}%, Fats: {distribution[1]}%, Carbs: {distribution[2]}%")
-    weight = sum(args.amount)
-    print(f"Weight: {weight}g")
-    print(f"Macros per gram:\nProtein: {macros[0]/weight}, Fats: {macros[1]/weight}%, Carbs: {macros[2]/weight}%")
+    # Retrieve the nutrition data for the list of foods.
+    if args.mode == "meals":
+        # Convert the meal list into a list of ingredient macros and servings.
+        nutrition_data = meals_to_data(args.foods, args.amounts)
+    else:
+        # Convert the ingredient list into a list of ingredient macros and
+        # servings.
+        nutrition_data = ingredients_to_data(args.foods, args.amounts)
+
+    # Compute our quantities of interest for our ingredients.
+    for ingredient, serving in nutrition_data:
+        calories += calculate_ingredient_calories(ingredient, serving)
+        macros += calculate_ingredient_macros(ingredient, serving)
+    distribution = calculate_macro_distribution(calories, macros)
+
+    if not args.quiet:
+        print(
+            f"Total calories: {calories}\n"
+            f"Protein: {macros[0]}g Fat: {macros[1]}g Carbs: {macros[2]}g\n"
+            f"Protein: {distribution[0]}% Fat: {distribution[1]}% "
+            f"Carbs: {distribution[2]}%\n"
+        )
+
+    # TODO: Add the date as either part of the filename or as a new column.
+    if args.save:
+        import csv
+        with open(f"data/{args.user}.csv", "a") as handle:
+            writer = csv.writer(handle)
+            for food, amount in zip(args.foods, args.amounts):
+                writer.writerow([
+                    food,
+                    amount,
+                    calories,
+                    macros[0],
+                    macros[1],
+                    macros[2],
+                    distribution[0],
+                    distribution[1],
+                    distribution[2]
+                ])
