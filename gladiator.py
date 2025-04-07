@@ -41,8 +41,8 @@ def calculate_macro_distribution(calories: float, macros: np.ndarray):
 # Converts a list of ingredients into macros and servings.
 def ingredients_to_data(ingredients: list[str], amounts: list[float]):
     # TODO: Remove after implementing a proper database.
-    with open("ingredients.json", "r") as handler:
-        ingredient_database = json.load(handler)
+    with open("ingredients.json", "r") as handle:
+        ingredient_database = json.load(handle)
 
     # Store each ingredient's macros and serving amount.
     nutrition_data = []
@@ -60,12 +60,12 @@ def ingredients_to_data(ingredients: list[str], amounts: list[float]):
 # Converts a list of meals into macros and servings.
 def meals_to_data(meals: list[str], amounts: list[float]):
     # TODO: Remove after implementing a proper database.
-    with open("meals.json", "r") as handler:
-        meal_database = json.load(handler)
+    with open("meals.json", "r") as handle:
+        meal_database = json.load(handle)
 
     # TODO: Remove after implementing a proper database.
-    with open("ingredients.json", "r") as handler:
-        ingredient_database = json.load(handler)
+    with open("ingredients.json", "r") as handle:
+        ingredient_database = json.load(handle)
 
     nutrition_data = []
     for meal, amount in zip(meals, amounts):
